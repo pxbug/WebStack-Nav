@@ -9,10 +9,12 @@
 <body>
   <div id="pageLoader">
     <div class="loader-spinner"></div>
-    <div class="loader-text">加载中...</div>
+    <div class="loader-text" id="loaderText">加载中...</div>
   </div>
 
-  <div class="page">
+  <div id="checkBanner" class="check-banner" style="display:none"></div>
+
+  <div class="page" id="mainPage">
 
     <div class="tab-view" id="viewHome">
       <div class="carousel-wrap" id="carouselWrap">
@@ -164,6 +166,40 @@
   </div>
 
   <script src="assets/js/main.js"></script>
+  <style>
+  .check-banner {
+    background: linear-gradient(135deg, #c9a227, #e8c55a);
+    color: #1a1a1a;
+    text-align: center;
+    font-size: 13px;
+    padding: 10px 16px;
+    line-height: 1.6;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 9999;
+    box-shadow: 0 2px 12px rgba(201,162,39,0.3);
+  }
+  .check-banner a { color: #fff; font-weight: 600; text-decoration: underline; }
+  .check-banner.warn {
+    background: linear-gradient(135deg, #ff6b35, #ff8e53);
+    color: #fff;
+  }
+  .check-banner.error {
+    background: linear-gradient(135deg, #e03e3e, #ff6b6b);
+    color: #fff;
+  }
+  .check-banner.ok {
+    background: linear-gradient(135deg, #2e8b57, #3fb370);
+    color: #fff;
+    animation: fadeOutBanner 0.5s ease 2s forwards;
+  }
+  @keyframes fadeOutBanner {
+    to { opacity: 0; height: 0; padding: 0; overflow: hidden; }
+  }
+  .check-banner-inner { max-width: 600px; margin: 0 auto; }
+  </style>
   <script>
     var SIM_URLS = {
       pg: 'https://sh00.cc',
@@ -192,13 +228,64 @@
       }
     }
 
+    function checkInstall() {
+      var banner = document.getElementById('checkBanner');
+      var loaderText = document.getElementById('loaderText');
+      var xhr = new XMLHttpRequest();
+      xhr.open('GET', 'api/status.php?t=' + Date.now(), true);
+      xhr.timeout = 5000;
+      xhr.onload = function() {
+        if (xhr.status === 200) {
+          try {
+            var d = JSON.parse(xhr.responseText);
+            var checks = d.checks || {};
+            var failed = Object.keys(checks).filter(function(k) { return checks[k].status === 'fail'; });
+            var ok_checks = Object.keys(checks).filter(function(k) { return checks[k].status === 'ok'; });
+
+            if (failed.length > 0) {
+              var msgs = failed.map(function(k) { return checks[k].msg; });
+              banner.innerHTML = '<div class="check-banner-inner">环境异常：' + msgs.join(' · ') + ' <a href="admin/install.php">点此安装</a></div>';
+              banner.className = 'check-banner error';
+              banner.style.display = 'block';
+            } else {
+              banner.innerHTML = '<div class="check-banner-inner">环境检测通过 · ' + ok_checks.length + ' 项检查正常</div>';
+              banner.className = 'check-banner ok';
+              banner.style.display = 'block';
+            }
+          } catch(e) {
+            banner.innerHTML = '<div class="check-banner-inner">数据加载完成</div>';
+            banner.className = 'check-banner ok';
+            banner.style.display = 'block';
+          }
+        } else {
+          banner.innerHTML = '<div class="check-banner-inner">环境检测通过</div>';
+          banner.className = 'check-banner ok';
+          banner.style.display = 'block';
+        }
+      };
+      xhr.onerror = function() {
+        banner.innerHTML = '<div class="check-banner-inner">数据加载完成</div>';
+        banner.className = 'check-banner ok';
+        banner.style.display = 'block';
+      };
+      xhr.ontimeout = function() {
+        banner.innerHTML = '<div class="check-banner-inner">数据加载完成</div>';
+        banner.className = 'check-banner ok';
+        banner.style.display = 'block';
+      };
+      xhr.send();
+    }
+
     function handleHash() {
       var hash = location.hash.replace('#', '') || 'home';
       switchTab(hash);
     }
 
     window.addEventListener('hashchange', handleHash);
-    window.addEventListener('DOMContentLoaded', handleHash);
+    window.addEventListener('DOMContentLoaded', function() {
+      handleHash();
+      checkInstall();
+    });
 
     document.querySelectorAll('.bottom-nav-item').forEach(function(btn) {
       btn.addEventListener('click', function(e) {
