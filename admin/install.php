@@ -1,9 +1,4 @@
 <?php
-/**
- * 导航站安装程序
- * 访问此文件即可完成数据库配置和管理员账号创建
- */
-
 define('INSTALL_LOCK_FILE', __DIR__ . '/install.lock');
 
 if (file_exists(INSTALL_LOCK_FILE)) {
@@ -32,9 +27,12 @@ if ($step === 3 && $_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($db_user === '') $errors[] = '数据库用户名不能为空';
     if ($admin_user === '') $errors[] = '管理员账号不能为空';
     if (strlen($admin_user) < 3) $errors[] = '管理员账号至少 3 个字符';
-    if ($admin_pass === '') $errors[] = '密码不能为空';
-    if (strlen($admin_pass) < 6) $errors[] = '密码至少 6 个字符';
-    if ($admin_pass !== $admin_pass2) $errors[] = '两次输入的密码不一致';
+    if ($admin_pass === '') {
+        $admin_pass = 'admin123';
+    } else {
+        if (strlen($admin_pass) < 6) $errors[] = '密码至少 6 个字符';
+    }
+    if ($admin_pass !== '' && $admin_pass2 !== '' && $admin_pass !== $admin_pass2) $errors[] = '两次输入的密码不一致';
 
     if (empty($errors)) {
         try {
@@ -364,11 +362,11 @@ input::placeholder { color: #444; }
             </div>
             <div class="field">
                 <label>登录密码 <span>*</span></label>
-                <input type="password" name="admin_pass" placeholder="至少 6 位密码" required minlength="6">
+                <input type="password" name="admin_pass" placeholder="留空默认 admin123" minlength="6">
             </div>
             <div class="field">
                 <label>确认密码 <span>*</span></label>
-                <input type="password" name="admin_pass2" placeholder="再输一次密码" required>
+                <input type="password" name="admin_pass2" placeholder="再输一次密码">
             </div>
             <button type="submit" class="btn">立即安装 →</button>
         </form>
