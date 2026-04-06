@@ -1,4 +1,6 @@
 <?php
+session_start();
+
 define('INSTALL_LOCK_FILE', __DIR__ . '/install.lock');
 
 if (file_exists(INSTALL_LOCK_FILE)) {
@@ -9,6 +11,14 @@ if (file_exists(INSTALL_LOCK_FILE)) {
 $errors  = [];
 $success = '';
 $step    = isset($_GET['step']) ? intval($_GET['step']) : 1;
+
+if (isset($_GET['err']) && !empty($_SESSION['install_errors'])) {
+    $errors = $_SESSION['install_errors'];
+    $_post  = $_SESSION['install_post'] ?? [];
+    unset($_SESSION['install_errors'], $_SESSION['install_post']);
+} else {
+    $_post = [];
+}
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['step'])) {
     $step = intval($_POST['step']);
@@ -300,7 +310,7 @@ input::placeholder { color: #444; }
         <?php if ($step === 1): ?>
         <div class="steps">
             <div class="step done"><div class="step-num">1</div><div class="step-label">环境检测</div></div>
-            <div class="step active"><div class="step-num">2</div><div class="step-label">配置</div></div>
+            <div class="step"><div class="step-num">2</div><div class="step-label">配置</div></div>
             <div class="step"><div class="step-num">3</div><div class="step-label">完成</div></div>
         </div>
         <h2>开始安装</h2>
@@ -331,15 +341,15 @@ input::placeholder { color: #444; }
             <input type="hidden" name="step" value="3">
             <div class="field">
                 <label>数据库地址</label>
-                <input type="text" name="db_host" value="localhost" placeholder="通常为 localhost">
+                <input type="text" name="db_host" value="<?= htmlspecialchars($_post['db_host'] ?? 'localhost') ?>" placeholder="通常为 localhost">
             </div>
             <div class="field">
                 <label>数据库名 <span>*</span></label>
-                <input type="text" name="db_name" value="navigation" placeholder="请输入数据库名" required>
+                <input type="text" name="db_name" value="<?= htmlspecialchars($_post['db_name'] ?? 'navigation') ?>" placeholder="请输入数据库名" required>
             </div>
             <div class="field">
                 <label>数据库用户名 <span>*</span></label>
-                <input type="text" name="db_user" value="navigation" placeholder="数据库用户名" required>
+                <input type="text" name="db_user" value="<?= htmlspecialchars($_post['db_user'] ?? 'navigation') ?>" placeholder="数据库用户名" required>
             </div>
             <div class="field">
                 <label>数据库密码</label>
@@ -347,6 +357,16 @@ input::placeholder { color: #444; }
             </div>
             <button type="submit" class="btn">立即安装 →</button>
         </form>
+
+        <?php elseif ($step === 3): ?>
+        <?php if (!empty($errors)): ?>
+        <?php
+        $_SESSION['install_errors'] = $errors;
+        $_SESSION['install_post'] = ['db_host'=>$db_host, 'db_name'=>$db_name, 'db_user'=>$db_user];
+        header('Location: install.php?step=2&err=1');
+        exit;
+        ?>
+        <?php endif; ?>
 
         <?php elseif ($step === 4): ?>
         <div class="steps">
