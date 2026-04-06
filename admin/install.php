@@ -3,8 +3,8 @@ session_start();
 
 define('INSTALL_LOCK_FILE', __DIR__ . '/install.lock');
 
-if (file_exists(INSTALL_LOCK_FILE)) {
-    header('Location: index.php');
+if (file_exists(__DIR__ . '/config.php') && file_exists(INSTALL_LOCK_FILE)) {
+    header('Location: login.php');
     exit;
 }
 
@@ -174,7 +174,7 @@ PHPCONFIG;
 
     if (empty($errors)) {
         file_put_contents(INSTALL_LOCK_FILE, date('Y-m-d H:i:s'));
-        header('Location: install.php?step=4');
+        echo '<!DOCTYPE html><html><head><meta charset="UTF-8"><script>location.replace("install.php?step=4");</script></head></html>';
         exit;
     }
 }
