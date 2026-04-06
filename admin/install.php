@@ -15,24 +15,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['step'])) {
 }
 
 if ($step === 3 && $_SERVER['REQUEST_METHOD'] === 'POST') {
-    $db_host     = trim($_POST['db_host'] ?? 'localhost');
-    $db_name     = trim($_POST['db_name'] ?? '');
-    $db_user     = trim($_POST['db_user'] ?? '');
-    $db_pass     = $_POST['db_pass'] ?? '';
-    $admin_user  = trim($_POST['admin_user'] ?? '');
-    $admin_pass  = $_POST['admin_pass'] ?? '';
-    $admin_pass2 = $_POST['admin_pass2'] ?? '';
+    $db_host = trim($_POST['db_host'] ?? 'localhost');
+    $db_name = trim($_POST['db_name'] ?? '');
+    $db_user = trim($_POST['db_user'] ?? '');
+    $db_pass = $_POST['db_pass'] ?? '';
 
     if ($db_name === '') $errors[] = '数据库名不能为空';
     if ($db_user === '') $errors[] = '数据库用户名不能为空';
-    if ($admin_user === '') $errors[] = '管理员账号不能为空';
-    if (strlen($admin_user) < 3) $errors[] = '管理员账号至少 3 个字符';
-    if ($admin_pass === '') {
-        $admin_pass = 'admin123';
-    } else {
-        if (strlen($admin_pass) < 6) $errors[] = '密码至少 6 个字符';
-    }
-    if ($admin_pass !== '' && $admin_pass2 !== '' && $admin_pass !== $admin_pass2) $errors[] = '两次输入的密码不一致';
 
     if (empty($errors)) {
         try {
@@ -47,6 +36,8 @@ if ($step === 3 && $_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     if (empty($errors)) {
+        $admin_user  = 'admin';
+        $admin_pass  = 'admin123';
         $config_content = <<<'PHPCONFIG'
 <?php
 define('DB_HOST', '{{DB_HOST}}');
@@ -327,8 +318,8 @@ input::placeholder { color: #444; }
             <div class="step active"><div class="step-num">2</div><div class="step-label">配置</div></div>
             <div class="step"><div class="step-num">3</div><div class="step-label">完成</div></div>
         </div>
-        <h2>数据库 &amp; 管理员</h2>
-        <p class="subtitle">填写您的 MySQL 数据库信息和管理员账号</p>
+        <h2>数据库配置</h2>
+        <p class="subtitle">填写您的 MySQL 数据库信息</p>
 
         <?php if (!empty($errors)): ?>
         <div class="alert alert-error">
@@ -354,20 +345,6 @@ input::placeholder { color: #444; }
                 <label>数据库密码</label>
                 <input type="password" name="db_pass" placeholder="数据库密码，留空表示无密码">
             </div>
-            <div class="divider"></div>
-            <p style="font-size:13px;color:#666;margin-bottom:16px;">管理员账号</p>
-            <div class="field">
-                <label>管理员账号 <span>*</span></label>
-                <input type="text" name="admin_user" value="admin" placeholder="登录后台的用户名" required>
-            </div>
-            <div class="field">
-                <label>登录密码 <span>*</span></label>
-                <input type="password" name="admin_pass" placeholder="留空默认 admin123" minlength="6">
-            </div>
-            <div class="field">
-                <label>确认密码 <span>*</span></label>
-                <input type="password" name="admin_pass2" placeholder="再输一次密码">
-            </div>
             <button type="submit" class="btn">立即安装 →</button>
         </form>
 
@@ -386,7 +363,7 @@ input::placeholder { color: #444; }
             <tr><td>前台地址</td><td>/index.html</td></tr>
             <tr><td>后台地址</td><td>/admin/</td></tr>
             <tr><td>管理员账号</td><td>admin</td></tr>
-            <tr><td>默认密码</td><td>（你设置的密码）</td></tr>
+            <tr><td>登录密码</td><td>admin123</td></tr>
         </table>
         <div style="text-align:center;">
             <a href="../index.html" class="link-btn">打开前台</a>
